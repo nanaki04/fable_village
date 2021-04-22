@@ -112,18 +112,16 @@ impl<'s> System<'s> for MouseAsTouchSystem {
             .collect();
 
         for (e, mut touch, _) in (&*entities, &mut touches, &mouse_simulated_touches).join() {
-            if touch.is_ended() {
-                entities.delete(e).expect("Failed to delete mouse simulated touch");
-                continue;
-            }
 
             if has_cancel_event {
                 touch.status = TouchPhase::Cancelled;
+                entities.delete(e).expect("Failed to delete mouse simulated touch");
                 continue;
             }
 
             if released_buttons.contains(&touch.id) {
                 touch.status = TouchPhase::Ended;
+                entities.delete(e).expect("Failed to delete mouse simulated touch");
                 continue;
             }
 

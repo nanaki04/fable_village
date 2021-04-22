@@ -3,3 +3,5 @@
 snc.sh
 pull.sh
 tags
+*.swp
+*.swo

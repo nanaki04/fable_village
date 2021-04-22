@@ -8,6 +8,7 @@ use amethyst::{
     },
 };
 
+#[derive(Debug)]
 pub struct Touch {
     pub start: (f64, f64),
     pub pos: (f64, f64),

@@ -14,6 +14,9 @@ pub use self::{
         mouse_as_touch_system::{
             MouseAsTouchSystem,
         },
+        touch_input_debug_system::{
+            TouchInputDebugSystem,
+        },
     },
     components::{
         touch::{

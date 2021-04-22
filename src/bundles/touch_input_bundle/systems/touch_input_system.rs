@@ -61,11 +61,6 @@ impl<'s> System<'s> for TouchInputSystem {
             .partition(|touch| touch.phase == TouchPhase::Started);
 
         for (e, mut touch, _) in (&*entities, &mut touches, !&mouse_simulated_touches).join() {
-            if touch.is_ended() {
-                entities.delete(e).expect("Failed to delete touch");
-                continue;
-            }
-
             let winit_touch = touch_info
                 .iter()
                 .find(|&&t| touch.id == t.id);
@@ -74,6 +69,10 @@ impl<'s> System<'s> for TouchInputSystem {
                 touch.prev = touch.pos;
                 touch.pos = (t.location.x, t.location.y);
                 touch.status = t.phase;
+            }
+
+            if touch.is_ended() { // MEMO: even when deleted here, the entity lasts for the rest of the frame to handle the Ended or Cancelled status
+                entities.delete(e).expect("Failed to delete touch");
             }
         }
 
