@@ -24,6 +24,21 @@ use amethyst::{
 //    },
 //};
 
+
+use serde::Deserialize;
+use amethyst_master_data::derive::MasterData;
+use amethyst_master_data::*;
+
+#[derive(Debug, Deserialize, Eq, PartialEq, MasterData, Clone)]
+struct Text {
+    id: u64,
+    desc: String,
+    en: String,
+    nl: String,
+    jp: String,
+}
+
+
 #[derive(Default)]
 pub struct LoadingState {
     progress_counter: Option<ProgressCounter>,
@@ -32,6 +47,9 @@ pub struct LoadingState {
 
 impl<'a, 'b> State<GameData<'a, 'b>, StateEvent> for LoadingState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        if let Some(text) = Text::find(data.world, |text| text.id == 2) {
+            println!("{:?}", text);
+        }
 //        let world = data.world;
 //
 //        let mut dispatcher_builder = DispatcherBuilder::new();

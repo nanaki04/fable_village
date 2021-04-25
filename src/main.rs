@@ -25,6 +25,8 @@ use amethyst::{
 use crate::states::LoadingState;
 use crate::bundles::TouchInputBundle;
 
+use serde::Deserialize;
+
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 

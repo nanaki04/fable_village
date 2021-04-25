@@ -1,0 +1,9 @@
+[package]
+name = "amethyst_master_data"
+version = "0.1.0"
+authors = ["Robert Jan Zwetsloot <jan.zwetsloot@adglobe.co.jp>"]
+edition = "2018"
+
+[dependencies]
+amethyst_master_data_derive = { path = "master_data_derive" }
+specs = { version = "0.16.0", default-features = false, features = [] }

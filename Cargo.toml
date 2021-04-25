@@ -9,3 +9,8 @@ edition = "2018"
 [dependencies.amethyst]
 version = "0.15"
 features = ["vulkan"]
+
+[dependencies]
+amethyst_master_data = { path = "master_data" }
+serde = { version = "1.0", features = ["derive"] }
+csv = "1.1"
