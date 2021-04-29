@@ -3,6 +3,7 @@ use crate::{
         touch_input_bundle::{
             TouchInputSystem,
             MouseAsTouchSystem,
+            TouchableSystem,
             TouchInputDebugSystem,
         },
     },
@@ -23,17 +24,32 @@ use amethyst::{
     Error,
 };
 
+#[derive(Debug, PartialEq)]
+pub enum LogLevel {
+    Silent,
+    Touchables,
+    Touches,
+    Full,
+}
+
 pub struct TouchInputBundle {
     mouse_buttons: Vec<MouseButton>,
-    enable_logging: bool,
+    track_touchables: bool,
+    log_level: LogLevel,
 }
 
 impl TouchInputBundle {
     pub fn new() -> Self {
         TouchInputBundle {
             mouse_buttons: vec![],
-            enable_logging: false,
+            track_touchables: false,
+            log_level: LogLevel::Silent,
         }
+    }
+
+    pub fn with_touchables(mut self) -> Self {
+        self.track_touchables = true;
+        self
     }
 
     pub fn with_mouse_simulation(mut self, button: MouseButton) -> Self {
@@ -41,8 +57,8 @@ impl TouchInputBundle {
         self
     }
 
-    pub fn with_logging(mut self) -> Self {
-        self.enable_logging = true;
+    pub fn with_logging(mut self, log_level: LogLevel) -> Self {
+        self.log_level = log_level;
         self
     }
 }
@@ -74,9 +90,17 @@ impl<'a, 'b> SystemBundle<'a, 'b> for TouchInputBundle {
             );
         }
 
-        if self.enable_logging {
+        if self.track_touchables {
             builder.add(
-                TouchInputDebugSystem,
+                TouchableSystem,
+                "touchable_system",
+                &["touch_input_system"],
+            );
+        }
+
+        if self.log_level != LogLevel::Silent {
+            builder.add(
+                TouchInputDebugSystem::new(self.log_level),
                 "touch_input_debug_system",
                 &["touch_input_system"],
             );

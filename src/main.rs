@@ -5,6 +5,8 @@ mod systems;
 mod states;
 mod components;
 mod bundles;
+mod extensions;
+mod loaders;
 
 use amethyst::{
     prelude::*,
@@ -23,7 +25,14 @@ use amethyst::{
     },
 };
 use crate::states::LoadingState;
-use crate::bundles::TouchInputBundle;
+use crate::{
+    bundles::{
+        TouchInputBundle,
+        touch_input_bundle::{
+            LogLevel,
+        },
+    },
+};
 
 use serde::Deserialize;
 
@@ -53,7 +62,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(TouchInputBundle::new()
             .with_mouse_simulation(MouseButton::Left)
-            .with_logging()
+            .with_touchables()
+            .with_logging(LogLevel::Touchables)
         )?
         //.with_bundle(input_bundle)?
         //.with(systems::PaddleSystem, "paddle_system", &["input_system"])

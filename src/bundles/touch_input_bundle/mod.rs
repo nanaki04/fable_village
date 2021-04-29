@@ -6,6 +6,7 @@ mod resources;
 pub use self::{
     bundle::{
         TouchInputBundle,
+        LogLevel,
     },
     systems::{
         touch_input_system::{
@@ -17,10 +18,16 @@ pub use self::{
         touch_input_debug_system::{
             TouchInputDebugSystem,
         },
+        touchable_system::{
+            TouchableSystem,
+        },
     },
     components::{
         touch::{
             Touch,
+        },
+        touchable::{
+            Touchable,
         },
     },
 };

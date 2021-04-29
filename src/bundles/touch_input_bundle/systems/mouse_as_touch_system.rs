@@ -1,4 +1,9 @@
 use amethyst::{
+    core::{
+        transform::{
+            Transform,
+        },
+    },
     shrev::{
         EventChannel,
         ReaderId
@@ -11,6 +16,12 @@ use amethyst::{
         Event,
         TouchPhase,
     },
+    window::{
+        ScreenDimensions,
+    },
+    renderer::{
+        Camera,
+    },
 };
 use crate::{
     bundles::{
@@ -22,6 +33,11 @@ use crate::{
             resources::{
                 MousePosition,
             },
+        },
+    },
+    extensions::{
+        camera::{
+            CameraExt,
         },
     },
 };
@@ -61,9 +77,12 @@ impl MouseAsTouchSystem {
 impl<'s> System<'s> for MouseAsTouchSystem {
     type SystemData = (
         Read<'s, EventChannel<Event>>,
+        ReadExpect<'s, ScreenDimensions>,
         Write<'s, MousePosition>,
         WriteStorage<'s, Touch>,
         WriteStorage<'s, MouseSimulatedTouch>,
+        ReadStorage<'s, Camera>,
+        ReadStorage<'s, Transform>,
         Entities<'s>,
     );
 
@@ -71,45 +90,65 @@ impl<'s> System<'s> for MouseAsTouchSystem {
         &mut self,
         (
             input,
+            screen_dimensions,
             mut mouse_pos,
             mut touches,
             mut mouse_simulated_touches,
+            cameras,
+            transforms,
             entities,
         ): Self::SystemData,
     ) {
+        let camera = (&cameras, &transforms).join()
+            .next();
+
         let mouse_events : Vec<&WindowEvent> = input
             .read(&mut self.reader)
             .filter_map(find_mouse_event)
-            .collect();
+            .collect()
+            ;
 
         let last_move_event = mouse_events
             .iter()
             .rev()
-            .find(|e| matches!(e, WindowEvent::CursorMoved { .. }));
+            .find(|e| matches!(e, WindowEvent::CursorMoved { .. }))
+            ;
 
         if let Some(WindowEvent::CursorMoved { position, .. }) = last_move_event {
             mouse_pos.x = position.x;
             mouse_pos.y = position.y;
         }
 
+        let world_pos = camera
+            .map(|(cam, transform)| cam.to_world_pos(
+                transform,
+                (mouse_pos.x, mouse_pos.y),
+                (screen_dimensions.width() as f64, screen_dimensions.height() as f64),
+            ))
+            .unwrap_or((mouse_pos.x, mouse_pos.y))
+            ;
+
         let has_cancel_event = mouse_events
             .iter()
             .find(|e| matches!(e, WindowEvent::CursorLeft { .. }))
-            .is_some();
+            .is_some()
+            ;
 
         let pressed_buttons : Vec<u64> = mouse_events
             .iter()
             .filter_map(|&e| find_pressed_button(e))
             .filter(|button| self.mouse_buttons.contains(&button))
             .map(button_to_id)
-            .collect();
+            .collect()
+            ;
 
         let released_buttons : Vec<u64> = mouse_events
             .iter()
             .filter_map(|&e| find_released_button(e))
             .filter(|button| self.mouse_buttons.contains(&button))
             .map(button_to_id)
-            .collect();
+            .collect()
+            ;
 
         for (e, mut touch, _) in (&*entities, &mut touches, &mouse_simulated_touches).join() {
 
@@ -126,15 +165,16 @@ impl<'s> System<'s> for MouseAsTouchSystem {
             }
 
             touch.prev = touch.pos;
-            touch.pos = (mouse_pos.x, mouse_pos.y);
+            touch.pos = world_pos;
             touch.status = TouchPhase::Moved;
         }
 
         for new_touch_id in pressed_buttons {
+
             let touch = Touch {
-                start: (mouse_pos.x, mouse_pos.y),
-                pos: (mouse_pos.x, mouse_pos.y),
-                prev: (mouse_pos.x, mouse_pos.y),
+                start: world_pos,
+                pos: world_pos,
+                prev: world_pos,
                 status: TouchPhase::Started,
                 id: new_touch_id,
             };
@@ -142,7 +182,8 @@ impl<'s> System<'s> for MouseAsTouchSystem {
             entities.build_entity()
                 .with(touch, &mut touches)
                 .with(MouseSimulatedTouch, &mut mouse_simulated_touches)
-                .build();
+                .build()
+                ;
         }
     }
 }
