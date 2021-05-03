@@ -7,6 +7,7 @@ mod components;
 mod bundles;
 mod extensions;
 mod loaders;
+mod events;
 
 use amethyst::{
     prelude::*,
@@ -32,6 +33,13 @@ use crate::{
             LogLevel,
         },
     },
+    events::{
+        GameStateEvent,
+        GameStateEventReader,
+    },
+    systems::{
+        GlobalHotkeySystem,
+    },
 };
 
 use serde::Deserialize;
@@ -41,7 +49,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("config").join("display.ron");
-    //let bindings_path = app_root.join("config").join("bindings.ron");
+    let bindings_path = app_root.join("config").join("bindings.ron");
     let assets_dir = app_root.join("assets");
 
     let render_to_window = RenderToWindow::from_config_path(display_config_path)?
@@ -53,9 +61,9 @@ fn main() -> amethyst::Result<()> {
         .with_plugin(RenderFlat2D::default())
         ;
 
-//    let input_bundle = InputBundle::<StringBindings>::new()
-//        .with_bindings_from_file(bindings_path)?
-//        ;
+    let input_bundle = InputBundle::<StringBindings>::new()
+        .with_bindings_from_file(bindings_path)?
+        ;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(rendering_bundle)?
@@ -65,11 +73,15 @@ fn main() -> amethyst::Result<()> {
             .with_touchables()
             .with_logging(LogLevel::Touchables)
         )?
-        //.with_bundle(input_bundle)?
-        //.with(systems::PaddleSystem, "paddle_system", &["input_system"])
+        .with_bundle(input_bundle)?
+        .with(GlobalHotkeySystem, "global_hotkey_system", &[])
         ;
 
-    let mut game = Application::new(assets_dir, LoadingState::default(), game_data)?;
+    let mut game = CoreApplication::<_, GameStateEvent, GameStateEventReader>::new(
+        assets_dir,
+        LoadingState::default(),
+        game_data
+    )?;
 
     game.run();
 

@@ -23,10 +23,15 @@ use amethyst::{
     window::{
         ScreenDimensions,
     },
+    shrev::{
+        EventChannel,
+        ReaderId,
+    },
     GameData,
     State,
     StateData,
     StateEvent,
+    TransEvent,
     Trans,
 };
 use crate::{
@@ -44,6 +49,9 @@ use crate::{
         texture_loader::{
             load_background_renderer,
         },
+    },
+    events::{
+        GameStateEvent,
     },
 };
 
@@ -64,10 +72,11 @@ struct Text {
 #[derive(Default)]
 pub struct LoadingState {
     progress_counter: Option<ProgressCounter>,
+    //reader: Option<ReaderId<GameStateEvent>>,
     //dispatcher: Option<Dispatcher<'a, 'b>>,
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>, StateEvent> for LoadingState {
+impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         if let Some(text) = Text::find(data.world, |text| text.id == 3) {
             println!("{:?}", text);
@@ -115,6 +124,10 @@ impl<'a, 'b> State<GameData<'a, 'b>, StateEvent> for LoadingState {
             .with(background_renderer)
             .build()
             ;
+
+        //self.reader = Some(world.fetch_mut::<EventChannel<GameStateEvent>>()
+            //.register_reader());
+
 //
 //        let mut dispatcher_builder = DispatcherBuilder::new();
 //        dispatcher_builder.add(TouchInputSystem::new(world), "touch_input_system", &[]);
@@ -132,7 +145,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, StateEvent> for LoadingState {
     fn update(
         &mut self,
         data: StateData<'_, GameData<'_, '_>>,
-    ) -> Trans<GameData<'a, 'b>, StateEvent> {
+    ) -> Trans<GameData<'a, 'b>, GameStateEvent> {
         data.data.update(data.world);
 
 //        if let Some(dispatcher) = self.dispatcher.as_mut() {
@@ -144,13 +157,32 @@ impl<'a, 'b> State<GameData<'a, 'b>, StateEvent> for LoadingState {
             .filter(|progress_counter| progress_counter.is_complete())
             .map(|_| Trans::None)
             .unwrap_or(Trans::None)
+
+//        match trans {
+//            Trans::None => {
+//                let channel = data.world.read_resource::<EventChannel<GameStateEvent>>();
+//                channel.read(self.reader.as_mut().unwrap())
+//                    .inspect(|e| println!("e: {:?}", e))
+//                    .map(|e| match e {
+//                        GameStateEvent::Quit(_) => Trans::Quit,
+//                        _ => Trans::None,
+//                    })
+//                    .find(|trans| !matches!(trans, Trans::None))
+//                    .unwrap_or(Trans::None)
+//            },
+//            trans => trans,
+//        }
     }
 
     fn handle_event(
         &mut self,
         data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> Trans<GameData<'a, 'b>, StateEvent> {
-        Trans::None
+        event: GameStateEvent,
+    ) -> Trans<GameData<'a, 'b>, GameStateEvent> {
+        println!("event procced: {:?}", event);
+        match event {
+            GameStateEvent::Quit(_) => Trans::Quit,
+            _ => Trans::None,
+        }
     }
 }

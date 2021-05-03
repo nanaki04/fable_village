@@ -1,7 +1,6 @@
 (
-  axes: {
-    "left_paddle": Emulated(pos: Key(W), neg: Key(S)),
-    "right_paddle": Emulated(pos: Key(Up), neg: Key(Down)),
+  axes: {},
+  actions: {
+    "quit": [[Key(LControl), Key(Q)], [Key(LControl), Key(C)], [Key(RControl), Key(Q)], [Key(RControl), Key(C)]],
   },
-  actions: {},
 )
