@@ -46,12 +46,15 @@ use crate::{
         },
     },
     loaders::{
-        texture_loader::{
-            load_background_renderer,
+        sprite_loader::{
+            SpriteLoader,
         },
     },
     events::{
         GameStateEvent,
+    },
+    states::{
+        MainMenuState,
     },
 };
 
@@ -59,28 +62,34 @@ use serde::Deserialize;
 use amethyst_master_data::derive::MasterData;
 use amethyst_master_data::*;
 
-#[derive(Debug, Deserialize, Eq, PartialEq, MasterData, Clone)]
-struct Text {
-    id: u64,
-    desc: String,
-    en: String,
-    nl: String,
-    jp: String,
+//#[derive(Debug, Deserialize, Eq, PartialEq, MasterData, Clone)]
+//struct Text {
+//    id: u64,
+//    desc: String,
+//    en: String,
+//    nl: String,
+//    jp: String,
+//}
+
+
+pub struct LoadingState {
+    progress_counter: ProgressCounter,
+    //dispatcher: Option<Dispatcher<'a, 'b>>,
 }
 
-
-#[derive(Default)]
-pub struct LoadingState {
-    progress_counter: Option<ProgressCounter>,
-    //reader: Option<ReaderId<GameStateEvent>>,
-    //dispatcher: Option<Dispatcher<'a, 'b>>,
+impl Default for LoadingState {
+    fn default() -> Self {
+        Self {
+            progress_counter: ProgressCounter::new(),
+        }
+    }
 }
 
 impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        if let Some(text) = Text::find(data.world, |text| text.id == 3) {
-            println!("{:?}", text);
-        }
+//        if let Some(text) = Text::find(data.world, |text| text.id == 3) {
+//            println!("{:?}", text);
+//        }
 
         let world = data.world;
         let (screen_width, screen_height) = {
@@ -117,16 +126,17 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
             screen_height / 2.0,
             0.0
         );
-        let background_renderer = load_background_renderer(&world, "bg001", "png");
+        let background_renderer = SpriteLoader::new("textures/backgrounds/bg001")
+            .with_progress(&mut self.progress_counter)
+            .as_renderer(world, 0);
+
+        //let background_renderer = load_background_renderer(&world, "bg001", "png");
         world
             .create_entity()
             .with(background_transform)
             .with(background_renderer)
             .build()
             ;
-
-        //self.reader = Some(world.fetch_mut::<EventChannel<GameStateEvent>>()
-            //.register_reader());
 
 //
 //        let mut dispatcher_builder = DispatcherBuilder::new();
@@ -152,26 +162,11 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
 //            dispatcher.dispatch(data.world);
 //        }
 
-        self.progress_counter
-            .as_ref()
-            .filter(|progress_counter| progress_counter.is_complete())
-            .map(|_| Trans::None)
-            .unwrap_or(Trans::None)
-
-//        match trans {
-//            Trans::None => {
-//                let channel = data.world.read_resource::<EventChannel<GameStateEvent>>();
-//                channel.read(self.reader.as_mut().unwrap())
-//                    .inspect(|e| println!("e: {:?}", e))
-//                    .map(|e| match e {
-//                        GameStateEvent::Quit(_) => Trans::Quit,
-//                        _ => Trans::None,
-//                    })
-//                    .find(|trans| !matches!(trans, Trans::None))
-//                    .unwrap_or(Trans::None)
-//            },
-//            trans => trans,
-//        }
+        if self.progress_counter.is_complete() {
+            Trans::Switch(Box::new(MainMenuState))
+        } else {
+            Trans::None
+        }
     }
 
     fn handle_event(

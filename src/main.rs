@@ -1,6 +1,3 @@
-//mod pong;
-//mod paddle;
-//mod loader;
 mod systems;
 mod states;
 mod components;
