@@ -16,9 +16,15 @@ pub struct Quit;
 #[derive(Clone, Debug)]
 pub struct Unit;
 
+#[derive(Clone, Debug)]
+pub enum Transition {
+    MainMenu,
+}
+
 #[derive(Debug, EventReader, Clone)]
 #[reader(GameStateEventReader)]
 pub enum GameStateEvent {
     Quit(Quit),
     Placeholder(Unit),
+    Trans(Transition),
 }

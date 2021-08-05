@@ -21,6 +21,10 @@ use amethyst::{
     winit::{
         MouseButton,
     },
+    ui::{
+        RenderUi,
+        UiBundle,
+    },
 };
 use crate::states::LoadingState;
 use crate::{
@@ -36,6 +40,7 @@ use crate::{
     },
     systems::{
         GlobalHotkeySystem,
+        ButtonDispatchSystem,
     },
 };
 
@@ -56,6 +61,7 @@ fn main() -> amethyst::Result<()> {
     let rendering_bundle = RenderingBundle::<DefaultBackend>::new()
         .with_plugin(render_to_window)
         .with_plugin(RenderFlat2D::default())
+        .with_plugin(RenderUi::default())
         ;
 
     let input_bundle = InputBundle::<StringBindings>::new()
@@ -68,10 +74,12 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TouchInputBundle::new()
             .with_mouse_simulation(MouseButton::Left)
             .with_touchables()
-            .with_logging(LogLevel::Touchables)
+            //.with_logging(LogLevel::Touchables)
         )?
         .with_bundle(input_bundle)?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with(GlobalHotkeySystem, "global_hotkey_system", &[])
+        .with(ButtonDispatchSystem, "button_dispatch_system", &[])
         ;
 
     let mut game = CoreApplication::<_, GameStateEvent, GameStateEventReader>::new(

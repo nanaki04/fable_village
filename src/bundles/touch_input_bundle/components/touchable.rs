@@ -42,6 +42,10 @@ impl Touchable {
         self.touch_state = None;
         self.touch_id = None;
     }
+
+    pub fn is_touch_ended(&self) -> bool {
+        matches!(self.touch_state, Some(TouchPhase::Ended))
+    }
 }
 
 impl Component for Touchable {

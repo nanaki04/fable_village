@@ -1,6 +1,7 @@
 use amethyst::{
     assets::{
         ProgressCounter,
+        Loader,
     },
     ecs::{
         Component,
@@ -27,6 +28,13 @@ use amethyst::{
         EventChannel,
         ReaderId,
     },
+    ui::{
+        TtfFormat,
+        UiTransform,
+        UiText,
+        Anchor,
+        LineMode,
+    },
     GameData,
     State,
     StateData,
@@ -52,6 +60,9 @@ use crate::{
     },
     events::{
         GameStateEvent,
+        game_state_event::{
+            Transition,
+        },
     },
     states::{
         MainMenuState,
@@ -111,7 +122,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
             ;
 
         let mut plane_transform = Transform::default();
-        plane_transform.set_translation_xyz(25.0, 25.0, 0.0);
+        plane_transform.set_translation_xyz(26.0, 25.0, 0.0);
         world
             .create_entity()
             .with(plane_transform)
@@ -138,6 +149,40 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
             .build()
             ;
 
+        let font = world.read_resource::<Loader>().load(
+            "fonts/square.ttf",
+            TtfFormat,
+            (),
+            &world.read_resource(),
+        );
+
+        let loading_transform = UiTransform::new(
+            "loading_text".to_string(),
+            Anchor::Middle,
+            Anchor::Middle,
+            0.0,
+            0.0,
+            1.0,
+            250.0,
+            100.0,
+        );
+
+        let loading_text = UiText::new(
+            font.clone(),
+            "Loading...".to_string(),
+            [1.0, 1.0, 1.0, 1.0],
+            50.0,
+            LineMode::Single,
+            Anchor::Middle,
+        );
+
+        world
+            .create_entity()
+            .with(loading_transform)
+            .with(loading_text)
+            .with(Touchable::new("loading_text".to_string()))
+            .build()
+            ;
 //
 //        let mut dispatcher_builder = DispatcherBuilder::new();
 //        dispatcher_builder.add(TouchInputSystem::new(world), "touch_input_system", &[]);
@@ -163,7 +208,8 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
 //        }
 
         if self.progress_counter.is_complete() {
-            Trans::Switch(Box::new(MainMenuState))
+            //Trans::Switch(Box::new(MainMenuState))
+            Trans::None
         } else {
             Trans::None
         }
@@ -177,7 +223,12 @@ impl<'a, 'b> State<GameData<'a, 'b>, GameStateEvent> for LoadingState {
         println!("event procced: {:?}", event);
         match event {
             GameStateEvent::Quit(_) => Trans::Quit,
+            GameStateEvent::Trans(Transition::MainMenu) => Trans::Switch(Box::new(MainMenuState)),
             _ => Trans::None,
         }
+    }
+
+    fn on_stop(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+
     }
 }
